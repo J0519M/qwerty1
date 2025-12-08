@@ -1,0 +1,101 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+
+model Branch {
+  id        Int      @id @default(autoincrement())
+  name      String @unique
+  logoUrl  String?
+  address   String
+  status    Status  @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime? @updatedAt
+
+  rooms     room[]
+  courses   Course[]
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  password  String
+  status    Status  @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime? @updatedAt
+
+  @@map("branches")
+}
+
+model room {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  capacity  Int
+  branchId  Int
+  status    Status  @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime? @updatedAt
+
+  branch  Branch   @relation(fields: [branchId], references: [id])
+  groups  Group[]  
+
+  @@map("rooms")
+}
+
+model Course {
+  id          Int      @id @default(autoincrement())
+  name       String  @unique
+  price       Decimal @db.Decimal(10, 2)
+  durationMonths Int
+  level      CourseLevel
+  branchId   Int
+  status      Status  @default(ACTIVE)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime? @updatedAt
+
+  branch  Branch   @relation(fields: [branchId], references: [id])
+  groups  Group[]  // Add the opposite relation field for Group
+
+  @@map("courses")
+
+}
+
+model Group {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  courseId  Int
+  roomId    Int
+  startDate DateTime
+  endDate   DateTime
+  status    Status  @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime? @updatedAt
+
+  course  Course   @relation(fields: [courseId], references: [id])
+  room    room     @relation(fields: [roomId], references: [id])
+
+  @@map("groups")
+}
