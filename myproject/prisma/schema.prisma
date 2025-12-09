@@ -36,6 +36,8 @@ model Branch {
 
   rooms     room[]
   courses   Course[]
+  groups    Group[]
+  teachers  Teacher[]
 }
 
 model User {
@@ -70,6 +72,7 @@ model Course {
   name       String  @unique
   price       Decimal @db.Decimal(10, 2)
   durationMonths Int
+  durationHours  Float
   level      CourseLevel
   branchId   Int
   status      Status  @default(ACTIVE)
@@ -77,7 +80,7 @@ model Course {
   updatedAt   DateTime? @updatedAt
 
   branch  Branch   @relation(fields: [branchId], references: [id])
-  groups  Group[]  // Add the opposite relation field for Group
+  groups  Group[]  
 
   @@map("courses")
 
@@ -87,6 +90,7 @@ model Group {
   id        Int      @id @default(autoincrement())
   name      String   @unique
   courseId  Int
+  branchId  Int
   roomId    Int
   startDate DateTime
   endDate   DateTime
@@ -96,6 +100,52 @@ model Group {
 
   course  Course   @relation(fields: [courseId], references: [id])
   room    room     @relation(fields: [roomId], references: [id])
+  branch  Branch   @relation(fields: [branchId], references: [id])
+  teacherGroups TeacherGroup[]
 
   @@map("groups")
+  @@unique([courseId, name])
+}
+
+
+model Teacher {
+  id        Int      @id @default(autoincrement())
+  fullName  String
+  email     String   @unique
+  phone     String?
+  prefession String[]
+  status    Status  @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime? @updatedAt
+  branchId      Int
+  branch        Branch   @relation(fields: [branchId], references: [id])
+  teacherGroups TeacherGroup[]
+
+  @@map("teachers")
+  
+}
+
+model TeacherGroup {
+  teacherId Int
+  groupId   Int
+  status    Status  @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime? @updatedAt
+  teacher   Teacher @relation(fields: [teacherId], references: [id])
+  group     Group   @relation(fields: [groupId], references: [id])
+
+  @@id([teacherId, groupId])
+  @@map("teacherGroups")
+}
+
+model Student {
+  id        Int      @id @default(autoincrement())
+  fullName  String
+  email     String   @unique
+  phone     String?
+  status    Status  @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime? @updatedAt
+
+  @@map("students")
 }
